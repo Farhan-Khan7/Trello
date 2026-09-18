@@ -24,6 +24,6 @@ const projectNotesSchema = new Schema(
     }
 );
 
-const projectNotesModel = Schema.model("projectNotes", projectNotesSchema)
+const projectNotesModel = Schema.model("ProjectNote", projectNotesSchema)
 
 export default projectNotesModel
