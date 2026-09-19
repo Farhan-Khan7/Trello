@@ -1,8 +1,8 @@
 import mongoose, { Schema } from "mongoose";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import config from "../dbConnect/config.js";
 import JWT from "jsonwebtoken";
-
 
 const userSchema = new Schema({
     avatar: {
@@ -17,21 +17,28 @@ const userSchema = new Schema({
     },
     userName: {
         type: String,
-        require: true,
+        required: true,
+        unique: true,
+        trim: true,
+        lowerCase: true,
+    },
+    fullName: {
+        type: String,
+        // required: true,
         unique: true,
         trim: true,
         lowerCase: true,
     },
     email: {
         type: String,
-        require: true,
+        required: true,
         unique: true,
         trim: true,
         lowerCase: true,
     },
     password: {
         type: String,
-        require: true,
+        required: true,
         unique: true,
         trim: true,
         lowerCase: true,
@@ -42,81 +49,96 @@ const userSchema = new Schema({
     },
     isEmailVerified: {
         type: Boolean,
-        require: true,
-        default : false
+        required: true,
+        default: false,
     },
     refreshToken: {
         type: String,
-        require: true,
+        // required: true,
     },
     accessToken: {
         type: String,
-        require: true,
+        // required: true,
     },
     forgetPasswordToken: {
         type: String,
-        require: true,
+        // required: true,
     },
     forgetPasswordExpires: {
         type: Date,
-        require: true,
+        // required: true,
     },
-    resetPassword : {
-        type : String,
-        require : true
+    resetPassword: {
+        type: String,
+        // required: true,
     },
     emailVerficationToken: {
         type: String,
-        require: true,
+        // required: true,
     },
     emailVerficationExpires: {
         type: Date,
-        require: true,
+        // required: true,
     },
 });
 
+// hashing password
+userSchema.pre("save", async function () {
 
-// hashing password 
-userSchema.pre("save", async (next) => {
-    if (this.isModified(password)) {
-        return next();
-    } else {
+    if (!this.isModified("password")) {
+        return;
+    }
         // I am just testing a result of return after that I replace return with next()
 
-        return (this.password = await bcrypt.hash(this.password, 10));
-    }
+        this.password = await bcrypt.hash(this.password, 10);
+    
 });
 
 // For generation AccessToken
-userSchema.methods.generateAccessTokena = function() {
+userSchema.methods.generateAccessTokena = function () {
     const accessToken = JWT.sign(
         {
             id: this._id,
         },
-        config.ACCESS_TOKEN,
+        config.ACCESS_TOKEN_SECRET,
         {
             expiresIn: "1d",
         }
     );
 
-    return accessToken
+    return accessToken;
 };
 
 // For generation RefreshToken
-userSchema.methods.generateRefreshToken = function() {
+userSchema.methods.generateRefreshToken = function () {
     const refreshToken = JWT.sign(
         {
             id: this._id,
         },
-        config.REFRESH_TOKEN,
+        config.REFRESH_TOKEN_SECRET,
         {
             expiresIn: "1d",
         }
     );
 
-    return refreshToken
+    return refreshToken;
 };
 
+// For email Verfication Token
+userSchema.methods.generateEmailVerificationToken = async function () {
+    
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = await bcrypt.hash(verificationToken, 10);
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    return {
+        verificationToken,
+        hashedToken,
+        expiresAt
+    }
+};
 
 const userModel = mongoose.model("User", userSchema);
 
