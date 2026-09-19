@@ -2,8 +2,10 @@ import config from "../dbConnect/config.js";
 import userModel from "../models/User.models.js";
 import ApiError from "../utils/api-errors.js";
 import nodemailer from "nodemailer";
+import bcrypt from "bcryptjs";
 // import ApiResponse from "../utils/api-response.js"
 
+// Register User API Completed
 const registerUser = async (req, res) => {
     const { userName, email, password } = req.body;
     console.log("enter ho gaya controllers me !");
@@ -35,9 +37,9 @@ const registerUser = async (req, res) => {
 
     console.log(user, "\n");
 
-    const { verificationToken, hashedToken, expiresAt } = await user.generateEmailVerificationToken();
+    const { verificationToken, expiresAt } = await user.generateEmailVerificationToken();
 
-    user.emailVerficationToken = hashedToken;
+    user.emailVerficationToken = verificationToken;
     user.emailVerficationExpires = expiresAt;
 
     console.log(user.emailVerficationToken, "\n");
@@ -58,7 +60,7 @@ const registerUser = async (req, res) => {
         from: config.MAILTRAP_SENDER,
         to: user.email,
         subject: `Please Verfiy your email `,
-        text: `${config.BASE_URL}//api/v1/auth/profileverfiy${verificationToken}`,
+        text: `${config.BASE_URL}/api/v1/auth/profileverify/${user.emailVerficationToken}`,
     };
 
     transporter.sendMail(mailOptions, (err, info) => {
@@ -75,4 +77,47 @@ const registerUser = async (req, res) => {
     });
 };
 
-export { registerUser };
+const profileverify = async (req, res) => {
+    const { emailVerficationToken } = req.params;
+
+    console.log(emailVerficationToken);
+
+    if (!emailVerficationToken) {
+        return res.status(401).json({
+            success: false,
+            message: "invalid token!",
+        });
+    }
+
+    const user = await userModel.findOne({ emailVerficationToken });
+
+    console.log(user);
+
+    if (!user) {
+        return res.status(200).json({
+            success: true,
+            message: "User not Found!",
+        });
+    }
+
+    if (!user.emailVerficationExpires || user.emailVerficationExpires < new Date()) {
+        return res.status(401).json({
+            success: false,
+            message: "Token in Expired!",
+        });
+    }
+
+    
+    user.isEmailVerified = true;
+    user.emailVerficationToken = undefined;
+    user.emailVerficationExpires = undefined;
+
+    
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Profile verify successfully!",
+    });
+};
+export { registerUser, profileverify };

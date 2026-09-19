@@ -129,13 +129,12 @@ userSchema.methods.generateEmailVerificationToken = async function () {
     
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    const hashedToken = await bcrypt.hash(verificationToken, 10);
+    // const hashedToken = await bcrypt.hash(verificationToken, 10);
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     return {
         verificationToken,
-        hashedToken,
         expiresAt
     }
 };

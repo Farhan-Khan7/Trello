@@ -3,9 +3,6 @@ import { body } from "express-validator"
 
 const registervalidator = () => {
 
-    console.log("Register Validator me enter ho gaya line no . 6")
-    console.log(body("userName").value)
-
     return [
         body("userName")
         .trim()
@@ -26,7 +23,6 @@ const registervalidator = () => {
     ]
 
 }
-
 
 
 export {
