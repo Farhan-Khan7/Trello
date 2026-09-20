@@ -25,6 +25,30 @@ const registervalidator = () => {
 }
 
 
+const loginvalidator = () => {
+
+    return [
+        body("userName")
+        .trim()
+        .notEmpty().withMessage("username is required")
+        .isLowercase()
+        .optional(),
+
+        body("email")
+        .notEmpty().withMessage("Email is required")
+        .trim()
+        .isEmail()
+        .optional(),
+
+        body("password")
+        .trim()
+        .notEmpty().withMessage("password is required")
+        .isLength({min : 6}).withMessage("Wrong Password "),
+
+    ]
+}
+
 export {
-    registervalidator
+    registervalidator,
+    loginvalidator
 }

@@ -77,6 +77,7 @@ const registerUser = async (req, res) => {
     });
 };
 
+// profileVerify User API Completed
 const profileverify = async (req, res) => {
     const { emailVerficationToken } = req.params;
 
@@ -107,17 +108,48 @@ const profileverify = async (req, res) => {
         });
     }
 
-    
     user.isEmailVerified = true;
     user.emailVerficationToken = undefined;
     user.emailVerficationExpires = undefined;
 
-    
     await user.save();
 
     res.status(200).json({
         success: true,
         message: "Profile verify successfully!",
     });
+};
+
+const loginUser = async (req, res) => {
+    const { userName, email, password } = req.body;
+
+    if (!userName || email || password) {
+        return res.status(401).json({
+            success: false,
+            message: true,
+        });
+    }
+
+    const user = await userModel.findOne({
+        $or : {
+           userName,
+           email 
+        }
+    })
+
+    if(!user){
+        return res.status(401).json({
+            success : false,
+            message : "user not found!"
+        })
+    }
+
+    if(user.isEmailVerified){
+        const ispassword = await bcrypt.compare(password , user.password)
+
+        if(!ispassword){
+            
+        }
+    }
 };
 export { registerUser, profileverify };
