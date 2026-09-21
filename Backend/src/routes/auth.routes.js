@@ -1,7 +1,7 @@
 import express , { Router } from "express"
 import { registervalidator } from "../validator/auth.validator.js"
 import validate from "../middlewares/validate.middleware.js"
-import {registerUser , profileverify, me , refresh , loginUser} from "../controllers/auth.controllers.js"
+import {registerUser , profileverify, me , refresh , loginUser , logoutUser} from "../controllers/auth.controllers.js"
 
 const router = Router()
 
@@ -14,6 +14,7 @@ router.route("/profileverify/:emailVerficationToken").get(profileverify)
 router.route("/me").get(me)
 router.route("/refresh").post(refresh)
 router.route("/login").post(loginUser)
+router.route("/logout").get(logoutUser)
 
 
 

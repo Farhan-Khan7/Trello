@@ -8,9 +8,9 @@ import { verifyAccessToken, verifyRefreshToken } from "../utils/auth.js";
 
 // Register User API Completed
 const registerUser = async (req, res) => {
-    const { userName, email, password } = req.body;
+    const { userName, email, password , role } = req.body;
 
-    if (!userName || !email || !password) {
+    if (!userName || !email || !password || !role) {
         throw new ApiError(404, "userName Email & Password are required!");
     }
 
@@ -29,11 +29,14 @@ const registerUser = async (req, res) => {
         userName,
         email,
         password,
+        role
     });
 
     const { accessToken, refreshToken } = await user.generateTokens();
     const { verificationToken, expiresAt } = await user.generateEmailVerificationToken();
 
+
+    user.role = role;
     user.emailVerficationToken = verificationToken;
     user.emailVerficationExpires = expiresAt;
 
@@ -78,7 +81,7 @@ const registerUser = async (req, res) => {
             },
         },
         accessToken,
-        verificationToken
+        verificationToken,
     });
 };
 
@@ -97,11 +100,9 @@ const profileverify = async (req, res) => {
 
     const user = await userModel.findOne({ emailVerficationToken });
 
-    console.log(user);
-
     if (!user) {
-        return res.status(200).json({
-            success: true,
+        return res.status(401).json({
+            success: false,
             message: "User not Found!",
         });
     }
@@ -130,7 +131,7 @@ const me = async (req, res) => {
     const accessToken = req.headers.authorization.split(" ")[1];
 
     if (!accessToken) {
-        res.status(401).json({
+        return res.status(401).json({
             success: false,
             message: "invalid or unauthorized token !",
         });
@@ -182,7 +183,7 @@ const refresh = async (req, res) => {
             user.refreshToken = null;
             await user.save();
 
-            res.status(401).json({
+            return res.status(401).json({
                 message: "unauthorized , refresh token mismatch!",
             });
         }
@@ -196,15 +197,17 @@ const refresh = async (req, res) => {
             message: "Token refreshed successfully!",
             accessToken,
         });
-    } catch (err) { }
+    } catch (err) {
+        return res.status(401).json({
+            success: false,
+            message: "unauthorized , token not found",
+        });
+    }
 };
-
 
 // login API completed
 const loginUser = async (req, res) => {
     const { userName, email, password } = req.body;
-
-    console.log(userName, email, password)
 
     if (!(userName || email || password)) {
         return res.status(401).json({
@@ -214,10 +217,7 @@ const loginUser = async (req, res) => {
     }
 
     const user = await userModel.findOne({
-        $or: [
-            {userName},
-            {email},
-        ],
+        $or: [{ userName }, { email }],
     });
 
     if (!user) {
@@ -242,12 +242,13 @@ const loginUser = async (req, res) => {
 
             res.cookie("refreshToken", newRefreshToken);
             user.refreshToken = newRefreshToken;
-
+            user.isLoggedIn = true;
             await user.save();
 
             return res.status(200).json({
                 success: true,
                 message: "User LoggedIn successfully",
+                accessToken,
             });
         }
     } else {
@@ -262,4 +263,40 @@ const loginUser = async (req, res) => {
         message: "User LoggedIn successfully",
     });
 };
-export { registerUser, profileverify, me, refresh, loginUser };
+
+// logout API completed
+const logoutUser = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+
+    if (!refreshToken) {
+        return res.status(401).json({
+            success: false,
+            message: "unauthorized token",
+        });
+    }
+
+    const decode = verifyRefreshToken(refreshToken);
+
+    const user = await userModel.findById(decode.id);
+
+    
+    if (!user) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error!",
+        });
+    }
+
+    user.refreshToken = undefined;
+    user.isLoggedIn = false;
+    res.clearCookie("refreshToken", { httpOnly: true });
+
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Logout Successfully!",
+    });
+};
+export { registerUser, profileverify, me, refresh, loginUser, logoutUser };

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import config from "../config/config.js";
 import JWT from "jsonwebtoken";
+import {CompanyRoleEnum , AvailableCompanyRoles} from "../utils/constant.js"
 
 const userSchema = new Schema({
     avatar: {
@@ -34,6 +35,12 @@ const userSchema = new Schema({
         unique: true,
         trim: true,
         lowerCase: true,
+    },
+    role: {
+        type: String,
+        enum: AvailableCompanyRoles,
+        default: CompanyRoleEnum.MEMBER,
+        required: true,
     },
     password: {
         type: String,
