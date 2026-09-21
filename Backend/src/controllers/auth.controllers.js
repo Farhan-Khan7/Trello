@@ -1,16 +1,14 @@
-import config from "../dbConnect/config.js";
+import config from "../config/config.js";
 import userModel from "../models/User.models.js";
 import ApiError from "../utils/api-errors.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import { verifyAccessToken, verifyRefreshToken } from "../utils/auth.js";
 // import ApiResponse from "../utils/api-response.js"
 
 // Register User API Completed
 const registerUser = async (req, res) => {
     const { userName, email, password } = req.body;
-    console.log("enter ho gaya controllers me !");
-
-    console.log(userName, email, password, "\n");
 
     if (!userName || !email || !password) {
         throw new ApiError(404, "userName Email & Password are required!");
@@ -19,8 +17,6 @@ const registerUser = async (req, res) => {
     const existingUser = await userModel.findOne({
         $or: [{ email, userName }],
     });
-
-    console.log(existingUser, "\n");
 
     if (existingUser) {
         return res.status(400).json({
@@ -35,45 +31,53 @@ const registerUser = async (req, res) => {
         password,
     });
 
-    console.log(user, "\n");
-
+    const { accessToken, refreshToken } = await user.generateTokens();
     const { verificationToken, expiresAt } = await user.generateEmailVerificationToken();
 
     user.emailVerficationToken = verificationToken;
     user.emailVerficationExpires = expiresAt;
 
-    console.log(user.emailVerficationToken, "\n");
+    user.refreshToken = refreshToken;
+
+    res.cookie("refreshToken", refreshToken, { httpOnly: true });
 
     await user.save({ validateBeforeSave: false });
 
-    const transporter = nodemailer.createTransport({
-        host: config.MAILTRAP_HOST,
-        port: config.MAILTRAP_PORT,
-        secure: false,
-        auth: {
-            user: config.MAILTRAP_USER,
-            pass: config.MAILTRAP_PASS,
-        },
-    });
+    // const transporter = nodemailer.createTransport({
+    //     host: config.MAILTRAP_HOST,
+    //     port: config.MAILTRAP_PORT,
+    //     secure: false,
+    //     auth: {
+    //         user: config.MAILTRAP_USER,
+    //         pass: config.MAILTRAP_PASS,
+    //     },
+    // });
 
-    const mailOptions = {
-        from: config.MAILTRAP_SENDER,
-        to: user.email,
-        subject: `Please Verfiy your email `,
-        text: `${config.BASE_URL}/api/v1/auth/profileverify/${user.emailVerficationToken}`,
-    };
+    // const mailOptions = {
+    //     from: config.MAILTRAP_SENDER,
+    //     to: user.email,
+    //     subject: `Please Verfiy your email `,
+    //     text: `${config.BASE_URL}/api/v1/auth/profileverify/${user.emailVerficationToken}`,
+    // };
 
-    transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-            return console.log(`Email not sent to ${user.userName}`);
-        } else {
-            return console.log(`Email sent to ${user.userName} \n ${info.messageId}`);
-        }
-    });
+    // transporter.sendMail(mailOptions, (err, info) => {
+    //     if (err) {
+    //         return console.log(`Email not sent to ${user.userName}`);
+    //     } else {
+    //         return console.log(`Email sent to ${user.userName} \n ${info.messageId}`);
+    //     }
+    // });
 
     res.status(201).json({
         success: true,
         message: "User Registered Successfully !",
+        data: {
+            user: {
+                name: user.userName,
+                email: user.email,
+            },
+        },
+        accessToken,
     });
 };
 
@@ -120,6 +124,83 @@ const profileverify = async (req, res) => {
     });
 };
 
+// get-me User API Completed
+const me = async (req, res) => {
+    const accessToken = req.headers.authorization.split(" ")[1];
+
+    if (!accessToken) {
+        res.status(401).json({
+            success: false,
+            message: "invalid or unauthorized token !",
+        });
+    }
+
+    try {
+        const decode = verifyAccessToken(accessToken);
+
+        const user = await userModel.findById(decode.id);
+
+        return res.status(200).json({
+            success: true,
+            message: "user fetch successfully!",
+            data: {
+                user: {
+                    name: user.userName,
+                    email: user.email,
+                },
+            },
+        });
+    } catch (err) {
+        res.status(401).json({
+            message: "Unauthorized , invalid or expired token",
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Profile fetch successfully !",
+    });
+};
+
+const refresh = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(401).json({
+            message: "unauthorized , refresh token not found!",
+        });
+    }
+
+    try {
+        const decode = verifyRefreshToken(refreshToken);
+
+        const user = await userModel.findById(decode.id)
+
+        if(refreshToken !== user.refreshToken){
+            user.refreshToken = null
+            await user.save()
+
+            res.status(401).json({
+                message : "unauthorized , refresh token mismatch!"
+            })
+        }
+
+        const {accessToken ,  refreshToken : newRefreshToken } = user.generateTokens()
+
+        user.refreshToken = newRefreshToken,
+        res.cookies("refreshToken" , newRefreshToken , {httpOnly : true})
+
+        await user.save()
+        
+        res.status(200).json({
+            message : "Token refreshed successfully!",
+            accessToken
+        })
+
+
+    } catch (err) {}
+};
+
 const loginUser = async (req, res) => {
     const { userName, email, password } = req.body;
 
@@ -131,25 +212,24 @@ const loginUser = async (req, res) => {
     }
 
     const user = await userModel.findOne({
-        $or : {
-           userName,
-           email 
-        }
-    })
+        $or: {
+            userName,
+            email,
+        },
+    });
 
-    if(!user){
+    if (!user) {
         return res.status(401).json({
-            success : false,
-            message : "user not found!"
-        })
+            success: false,
+            message: "user not found!",
+        });
     }
 
-    if(user.isEmailVerified){
-        const ispassword = await bcrypt.compare(password , user.password)
+    if (user.isEmailVerified) {
+        const ispassword = await bcrypt.compare(password, user.password);
 
-        if(!ispassword){
-            
+        if (!ispassword) {
         }
     }
 };
-export { registerUser, profileverify };
+export { registerUser, profileverify, me , refresh };

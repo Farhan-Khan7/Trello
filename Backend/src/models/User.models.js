@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import config from "../dbConnect/config.js";
+import config from "../config/config.js";
 import JWT from "jsonwebtoken";
 
 const userSchema = new Schema({
@@ -25,7 +25,6 @@ const userSchema = new Schema({
     fullName: {
         type: String,
         // required: true,
-        unique: true,
         trim: true,
         lowerCase: true,
     },
@@ -84,49 +83,40 @@ const userSchema = new Schema({
 
 // hashing password
 userSchema.pre("save", async function () {
-
     if (!this.isModified("password")) {
         return;
     }
-        // I am just testing a result of return after that I replace return with next()
+    // I am just testing a result of return after that I replace return with next()
 
-        this.password = await bcrypt.hash(this.password, 10);
-    
+    this.password = await bcrypt.hash(this.password, 10);
 });
 
 // For generation AccessToken
-userSchema.methods.generateAccessTokena = function () {
+userSchema.methods.generateTokens = function () {
     const accessToken = JWT.sign(
         {
             id: this._id,
         },
         config.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: "1d",
+            expiresIn: "10m",
         }
     );
 
-    return accessToken;
-};
-
-// For generation RefreshToken
-userSchema.methods.generateRefreshToken = function () {
     const refreshToken = JWT.sign(
         {
             id: this._id,
         },
         config.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: "1d",
+            expiresIn: "7d",
         }
     );
-
-    return refreshToken;
+    return { accessToken, refreshToken };
 };
 
 // For email Verfication Token
 userSchema.methods.generateEmailVerificationToken = async function () {
-    
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
     // const hashedToken = await bcrypt.hash(verificationToken, 10);
@@ -135,8 +125,8 @@ userSchema.methods.generateEmailVerificationToken = async function () {
 
     return {
         verificationToken,
-        expiresAt
-    }
+        expiresAt,
+    };
 };
 
 const userModel = mongoose.model("User", userSchema);
