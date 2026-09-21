@@ -43,30 +43,30 @@ const registerUser = async (req, res) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // const transporter = nodemailer.createTransport({
-    //     host: config.MAILTRAP_HOST,
-    //     port: config.MAILTRAP_PORT,
-    //     secure: false,
-    //     auth: {
-    //         user: config.MAILTRAP_USER,
-    //         pass: config.MAILTRAP_PASS,
-    //     },
-    // });
+    const transporter = nodemailer.createTransport({
+        host: config.MAILTRAP_HOST,
+        port: config.MAILTRAP_PORT,
+        secure: false,
+        auth: {
+            user: config.MAILTRAP_USER,
+            pass: config.MAILTRAP_PASS,
+        },
+    });
 
-    // const mailOptions = {
-    //     from: config.MAILTRAP_SENDER,
-    //     to: user.email,
-    //     subject: `Please Verfiy your email `,
-    //     text: `${config.BASE_URL}/api/v1/auth/profileverify/${user.emailVerficationToken}`,
-    // };
+    const mailOptions = {
+        from: config.MAILTRAP_SENDER,
+        to: user.email,
+        subject: `Please Verfiy your email `,
+        text: `${config.BASE_URL}/api/v1/auth/profileverify/${user.emailVerficationToken}`,
+    };
 
-    // transporter.sendMail(mailOptions, (err, info) => {
-    //     if (err) {
-    //         return console.log(`Email not sent to ${user.userName}`);
-    //     } else {
-    //         return console.log(`Email sent to ${user.userName} \n ${info.messageId}`);
-    //     }
-    // });
+    transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+            return console.log(`Email not sent to ${user.userName}`);
+        } else {
+            return console.log(`Email sent to ${user.userName} \n ${info.messageId}`);
+        }
+    });
 
     res.status(201).json({
         success: true,
@@ -78,6 +78,7 @@ const registerUser = async (req, res) => {
             },
         },
         accessToken,
+        verificationToken
     });
 };
 
@@ -162,6 +163,7 @@ const me = async (req, res) => {
     });
 };
 
+// Token Generate API Completed
 const refresh = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
@@ -174,48 +176,48 @@ const refresh = async (req, res) => {
     try {
         const decode = verifyRefreshToken(refreshToken);
 
-        const user = await userModel.findById(decode.id)
+        const user = await userModel.findById(decode.id);
 
-        if(refreshToken !== user.refreshToken){
-            user.refreshToken = null
-            await user.save()
+        if (refreshToken !== user.refreshToken) {
+            user.refreshToken = null;
+            await user.save();
 
             res.status(401).json({
-                message : "unauthorized , refresh token mismatch!"
-            })
+                message: "unauthorized , refresh token mismatch!",
+            });
         }
 
-        const {accessToken ,  refreshToken : newRefreshToken } = user.generateTokens()
+        const { accessToken, refreshToken: newRefreshToken } = user.generateTokens();
 
-        user.refreshToken = newRefreshToken,
-        res.cookies("refreshToken" , newRefreshToken , {httpOnly : true})
+        res.cookie("refreshToken", newRefreshToken, { httpOnly: true });
+        ((user.refreshToken = newRefreshToken), await user.save());
 
-        await user.save()
-        
         res.status(200).json({
-            message : "Token refreshed successfully!",
-            accessToken
-        })
-
-
-    } catch (err) {}
+            message: "Token refreshed successfully!",
+            accessToken,
+        });
+    } catch (err) { }
 };
 
+
+// login API completed
 const loginUser = async (req, res) => {
     const { userName, email, password } = req.body;
 
-    if (!userName || email || password) {
+    console.log(userName, email, password)
+
+    if (!(userName || email || password)) {
         return res.status(401).json({
             success: false,
-            message: true,
+            message: "username or email and passwrod are required",
         });
     }
 
     const user = await userModel.findOne({
-        $or: {
-            userName,
-            email,
-        },
+        $or: [
+            {userName},
+            {email},
+        ],
     });
 
     if (!user) {
@@ -229,7 +231,35 @@ const loginUser = async (req, res) => {
         const ispassword = await bcrypt.compare(password, user.password);
 
         if (!ispassword) {
+            return res.status(401).json({
+                success: false,
+                message: "password incorrect!",
+            });
         }
+
+        if (userName === user.userName || email === user.email) {
+            const { accessToken, refreshToken: newRefreshToken } = user.generateTokens();
+
+            res.cookie("refreshToken", newRefreshToken);
+            user.refreshToken = newRefreshToken;
+
+            await user.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "User LoggedIn successfully",
+            });
+        }
+    } else {
+        return res.status(401).json({
+            success: false,
+            message: "email not verified!",
+        });
     }
+
+    res.status(200).json({
+        success: true,
+        message: "User LoggedIn successfully",
+    });
 };
-export { registerUser, profileverify, me , refresh };
+export { registerUser, profileverify, me, refresh, loginUser };
