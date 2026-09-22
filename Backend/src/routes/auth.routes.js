@@ -3,6 +3,7 @@ import { registervalidator } from "../validator/auth.validator.js"
 import validate from "../middlewares/validate.middleware.js"
 import {registerUser , profileverify, me , refresh , loginUser , logoutUser} from "../controllers/auth.controllers.js"
 
+
 const router = Router()
 
 

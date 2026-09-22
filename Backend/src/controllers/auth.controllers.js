@@ -158,10 +158,10 @@ const me = async (req, res) => {
         });
     }
 
-    res.status(200).json({
-        success: true,
-        message: "Profile fetch successfully !",
-    });
+    // return res.status(200).json({
+    //     success: true,
+    //     message: "Profile fetch successfully !",
+    // });
 };
 
 // Token Generate API Completed

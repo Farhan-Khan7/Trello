@@ -18,6 +18,6 @@ const projectMemberSchema = new Schema({
     }
 })
 
-const projectMemberSchemaModel = Schema.model("ProjectMember" , projectMemberSchema)
+const projectMemberSchemaModel = mongoose.model("ProjectMember" , projectMemberSchema)
 
 export default projectMemberSchemaModel

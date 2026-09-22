@@ -27,7 +27,7 @@ const ProjectSchema = new Schema(
 );
 
 
-const projectModel = Schema.model("Project" , ProjectSchema)
+const projectModel = mongoose.model("Project" , ProjectSchema)
 
 
 export default projectModel
