@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { addMember } from "../controllers/projectMember.controllers.js"
+import { addMember , deleteMember , getMemberById } from "../controllers/projectMember.controllers.js"
 
 const projectMemberRouter = Router()
 
@@ -8,6 +8,9 @@ const projectMemberRouter = Router()
 
 
 projectMemberRouter.route("/add-member").post(addMember)
+projectMemberRouter.route("/get-project-members/:id").get(getMemberById)
+projectMemberRouter.route("/delete-member/:id").post(deleteMember)
+
 
 
 export default projectMemberRouter
