@@ -3,7 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import config from "../config/config.js";
 import JWT from "jsonwebtoken";
-import {CompanyRoleEnum , AvailableCompanyRoles} from "../utils/constant.js"
+import {CompanyRoleEnum , AvailableCompanyRoles , UserRoleEnum , AvailableUserRoles} from "../utils/constant.js"
 
 const userSchema = new Schema({
     avatar: {

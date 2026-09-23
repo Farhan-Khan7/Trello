@@ -1,5 +1,5 @@
 export const UserRoleEnum = {
-    PROJECT : "project_admin",
+    PROJECT_ADMIN : "project_admin",
     MEMBER : "member"
 }
 

@@ -5,7 +5,7 @@ import {UserRoleEnum , AvailableUserRoles} from "../utils/constant.js"
 const projectMemberSchema = new Schema({
     user : {
         type : Schema.Types.ObjectId,
-        ref : "userModel"
+        ref : "User"
     },
     project : {
         type : Schema.Types.ObjectId,
