@@ -64,6 +64,7 @@ const getProjectById = async (req, res) => {
     });
 };
 
+// Update Project API Completed
 const updateProject = async (req, res) => {
     const { title, description } = req.body;
     const id = req.params.id;
@@ -95,4 +96,25 @@ const updateProject = async (req, res) => {
     });
 };
 
-export { createproject, getAllProjects, getProjectById , updateProject };
+const deleteProject = async (req , res) => {
+    const id = req.params.id
+
+    const deleteProject = await projectModel.findByIdAndDelete(id)
+
+    if(!deleteProject){
+        return res.status(404).json({
+            success : false,
+            message : "deleted Project ID not found!"
+        })
+    }
+
+    res.status(200).json({
+        success : true,
+        message : "Project Deleted Successfully!",
+        data : {
+            deleteProject
+        }
+    })
+}
+
+export { createproject, getAllProjects, getProjectById , updateProject , deleteProject};
