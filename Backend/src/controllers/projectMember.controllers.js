@@ -80,8 +80,6 @@ const getMemberById = async (req , res) => {
 }
 
 
-
-
 // delete member Post request Completed
 const deleteMember = async (req , res) => {
     const id = req.params.id
