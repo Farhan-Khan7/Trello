@@ -14,7 +14,7 @@ const ProjectSchema = new Schema(
         },
         createdBy: {
             type: Schema.Types.ObjectId,
-            ref: "userModel",
+            ref: "User",
         },
         createdOn: {
             type: Date,
