@@ -4,19 +4,22 @@ const projectNotesSchema = new Schema(
     {
         notes: {
             type: String,
-            require: true,
+            required: true,
         },
         projectReference: {
             type: Schema.Types.ObjectId,
-            ref: "projectModel",
+            ref: "Project",
         },
         createdBy: {
             type: Schema.Types.ObjectId,
-            ref: "userModel",
+            ref: "User",
+        },
+        isSolved : {
+            type: Boolean,
+            default: false,
         },
         createdOn: {
             type: Date,
-            require: true,
         },
     },
     {
