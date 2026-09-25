@@ -10,7 +10,6 @@ export const CompanyRoleEnum = {
     MEMBER : "member"
 }
 
-
 export const AvailableCompanyRoles = Object.values(CompanyRoleEnum);
 
 export const TaskStatusEnum = {

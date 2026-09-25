@@ -31,7 +31,7 @@ const registerUser = async (req, res) => {
         password,
         role
     });
-
+    console.log(user)
     const { accessToken, refreshToken } = await user.generateTokens();
     const { verificationToken, expiresAt } = await user.generateEmailVerificationToken();
 

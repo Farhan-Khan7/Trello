@@ -132,7 +132,7 @@ const completedProjectNote = async (req, res) => {
 
     res.status(200).json({
         success: true,
-        message: "Porject Completed Successfully!",
+        message: "Project Completed Successfully!",
         data: {
             completedProjectNotes,
         },
