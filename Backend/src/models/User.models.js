@@ -122,7 +122,7 @@ userSchema.methods.generateTokens = function () {
     return { accessToken, refreshToken };
 };
 
-// For email Verfication Token
+// For email Verification Token
 userSchema.methods.generateEmailVerificationToken = async function () {
     const verificationToken = crypto.randomBytes(32).toString("hex");
 

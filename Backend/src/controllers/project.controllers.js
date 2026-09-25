@@ -33,7 +33,7 @@ const getAllProjects = async (req, res) => {
 
     res.status(200).json({
         success: true,
-        message: "projects fethch successfully!",
+        message: "projects fetch successfully!",
         data: {
             project,
         },
@@ -96,25 +96,25 @@ const updateProject = async (req, res) => {
     });
 };
 
-const deleteProject = async (req , res) => {
+const deleteProject = async (req, res) => {
     const id = req.params.id
 
     const deleteProject = await projectModel.findByIdAndDelete(id)
 
-    if(!deleteProject){
+    if (!deleteProject) {
         return res.status(404).json({
-            success : false,
-            message : "deleted Project ID not found!"
+            success: false,
+            message: "deleted Project ID not found!"
         })
     }
 
     res.status(200).json({
-        success : true,
-        message : "Project Deleted Successfully!",
-        data : {
+        success: true,
+        message: "Project Deleted Successfully!",
+        data: {
             deleteProject
         }
     })
 }
 
-export { createproject, getAllProjects, getProjectById , updateProject , deleteProject};
+export { createproject, getAllProjects, getProjectById, updateProject, deleteProject };

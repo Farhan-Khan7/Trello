@@ -13,15 +13,15 @@ const TaskSchema = new Schema(
         },
         projectReference: {
             type: Schema.Types.ObjectId,
-            ref: "projectModel",
+            ref: "Project",
         },
-        assginToUser: {
+        assignToUser: {
             type: Schema.Types.ObjectId,
-            ref: "userModel",
+            ref: "User",
         },
-        assginBy: {
+        assignBy: {
             type: Schema.Types.ObjectId,
-            ref: "userModel",
+            ref: "User",
         },
         taskStatus: {
             type: AvailableTaskStatus,
@@ -42,6 +42,6 @@ const TaskSchema = new Schema(
     }
 );
 
-const TaskModel = mongoose.model("Task", TaskSchema);
+const taskModel = mongoose.model("Task", TaskSchema);
 
-export default TaskModel;
+export default taskModel;

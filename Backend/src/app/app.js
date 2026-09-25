@@ -3,6 +3,7 @@ import router from "../routes/auth.routes.js";
 import projectRouter from "../routes/project.routes.js"
 import projectMemberRouter from "../routes/projectMember.routes.js";
 import projectNotesRouter from "../routes/projectNotes.routes.js";
+import taskRouter from "../routes/task.routes.js";
 import cookieParser from "cookie-parser"
 
 
@@ -25,8 +26,12 @@ app.use("/api/v1/project" , projectRouter)
 // project member realted router
 app.use("/api/v1/project-member" , projectMemberRouter)
 
-// project Notes realed router
+// project Notes related router
 app.use("/api/v1/project-note" , projectNotesRouter)
+
+
+// task related router
+app.use("/api/v1/task" , taskRouter)
 
 
 export default app
