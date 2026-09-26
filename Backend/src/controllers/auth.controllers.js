@@ -205,7 +205,7 @@ const refresh = async (req, res) => {
     }
 };
 
-// login API completed
+// login User API completed
 const loginUser = async (req, res) => {
     const { userName, email, password } = req.body;
 
@@ -264,7 +264,7 @@ const loginUser = async (req, res) => {
     });
 };
 
-// logout API completed
+// logout  User API completed
 const logoutUser = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
