@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-import monogoose, { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const ProjectSchema = new Schema(
     {

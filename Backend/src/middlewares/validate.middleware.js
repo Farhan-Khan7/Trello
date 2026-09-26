@@ -11,10 +11,10 @@ const validate = (req, res , next) => {
         return next()
     }
 
-    const extrectedError = []
+    const extractedError = []
 
     errors.array().map((err) => {
-        return extrectedError.push({ [err.path] : err.message})
+        return extractedError.push({ [err.path] : err.message})
     })
 
 }
